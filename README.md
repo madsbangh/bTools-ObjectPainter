@@ -17,4 +17,4 @@
 
 For more information, check out the [API and Documentation](https://blobinet.github.io/bTools/)
 
-If you encounter any bugs or have any suggestions, please 
+If you encounter any bugs or have any suggestions, please post an issue !
