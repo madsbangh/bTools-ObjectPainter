@@ -1,7 +1,20 @@
-# **bTools** - ObjectPainter
+# **bTools - Plugins for Unity**  
+## Object Painter
 
-Part of bTools.
+**Prefab paint brush.**  
+*Does not require bTools Core*
 
-API and Documentation at https://blobinet.github.io/bTools/
+### Features
+- Paint prefabs on surfaces
+- Set multiple prefabs per brush with spawn chance
+- Randomise scale and rotation
+- Align any axis to the surface normal
+- Ignore slopes
+- Align prefabs to brush path
+- Create and save multiple brushes
 
-Please feel free to post issues, pull requests and make suggestions !
+![image](https://i.imgur.com/9Sq1ReY.png)
+
+For more information, check out the [API and Documentation](https://blobinet.github.io/bTools/)
+
+If you encounter any bugs or have any suggestions, please 
