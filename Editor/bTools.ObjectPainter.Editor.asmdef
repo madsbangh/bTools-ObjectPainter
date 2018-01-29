@@ -1,0 +1,12 @@
+{
+    "name": "bTools.ObjectPainter.Editor",
+    "references": [
+        "bTools.CodeExtensions",
+        "bTools.CodeExtensions.Editor",
+        "bTools.Core.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
