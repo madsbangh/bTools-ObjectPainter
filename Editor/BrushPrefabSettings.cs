@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using bTools.CodeExtensions;
 
 namespace bTools.ObjectPainter
 {
@@ -26,19 +25,19 @@ namespace bTools.ObjectPainter
 		[SerializeField] public Vector2 objectRandomRotation = Vector2.zero;
 		[SerializeField] public AlignMode alignMode = AlignMode.Up;
 		[SerializeField] public float weight = 1;
-		[System.NonSerialized] public bool isExpanded = false;
+		[SerializeField] public bool isExpanded = false;
 
 		// GUI
-		private readonly GUIContent alignContent = new GUIContent("Align to", "Which axis of the prefab to align with the surface normal");
-		private readonly GUIContent weightContent = new GUIContent("Weight", "How likely this prefab is to be selected instead of others in this brush");
-		private readonly GUIContent alignToPathContent = new GUIContent("Align to Path", "Align to follow the direction of the brush stroke");
+		private readonly GUIContent alignContent = new GUIContent("Align to", "Which axis of the prefab to align with the surface normal. None will always keep the prefab upright regardless of the surface normal");
+		private readonly GUIContent weightContent = new GUIContent("Weight", "How likely this prefab is to be selected compared to others in this brush");
+		private readonly GUIContent alignToPathContent = new GUIContent("Align to Path", "Align to the direction of the brush stroke");
 
 		public void OnGUI(int index, Rect area)
 		{
 			area.height = EditorGUIUtility.singleLineHeight;
 			area.y += 2;
-			isExpanded = EditorGUI.Foldout(area.WithW(10), isExpanded, "");
-			paintObject = EditorGUI.ObjectField(area.WithX(area.x + 15).WithW(area.width - 20), string.Empty, paintObject, typeof(GameObject), false) as GameObject;
+			isExpanded = EditorGUI.Foldout(new Rect(area.x, area.y, 10, area.height), isExpanded, "");
+			paintObject = EditorGUI.ObjectField(new Rect(area.x + 15, area.y, area.width - 20, area.height), string.Empty, paintObject, typeof(GameObject), false) as GameObject;
 
 			if (isExpanded)
 			{

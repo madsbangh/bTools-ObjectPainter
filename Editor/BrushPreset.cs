@@ -18,12 +18,11 @@ namespace bTools.ObjectPainter
 		[SerializeField] public float cullAngle = 60f;
 		[SerializeField] public bool cullInvert = false;
 		[SerializeField] public Vector3 cullRef = Vector3.up;
-
 		[SerializeField] public List<BrushPrefabSettings> prefabs = new List<BrushPrefabSettings>();
 
 		// GUI.
 		private Vector2 scrollPos;
-		private readonly Color HeaderSeparatorColor = new Color32(237, 166, 3, 255);
+
 		private readonly GUIContent colliderStrictContent = new GUIContent("Collider Strict", "Only places objects on the first collider you clicked on");
 		private readonly GUIContent rateContent = new GUIContent("Rate", "Objects placed per second");
 		private readonly GUIContent radiusContent = new GUIContent("Radius", "Alt + MouseWheel to edit in the scene view");
@@ -43,7 +42,7 @@ namespace bTools.ObjectPainter
 			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
 			{
 				EditorGUILayout.LabelField("General - " + brushName, EditorStyles.boldLabel);
-				EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, 1), HeaderSeparatorColor);
+				EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, 1), ObjectPainterResources.HeaderSeparatorColor);
 				GUILayout.Space(4);
 
 				brushName = EditorGUILayout.TextField("Name ", brushName);
@@ -55,7 +54,7 @@ namespace bTools.ObjectPainter
 			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
 			{
 				EditorGUILayout.LabelField("Colliders", EditorStyles.boldLabel);
-				EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, 1), HeaderSeparatorColor);
+				EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, 1), ObjectPainterResources.HeaderSeparatorColor);
 				GUILayout.Space(4);
 
 				layerMask = LayerMaskField(layersContent, layerMask);
@@ -65,7 +64,7 @@ namespace bTools.ObjectPainter
 			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
 			{
 				EditorGUILayout.LabelField(cullingContent, EditorStyles.boldLabel);
-				EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, 1), HeaderSeparatorColor);
+				EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, 1), ObjectPainterResources.HeaderSeparatorColor);
 				GUILayout.Space(4);
 
 				cullEnabled = EditorGUILayout.ToggleLeft(cullContent, cullEnabled);
@@ -81,7 +80,7 @@ namespace bTools.ObjectPainter
 			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
 			{
 				EditorGUILayout.LabelField("Prefabs", EditorStyles.boldLabel);
-				EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, 1), HeaderSeparatorColor);
+				EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, 1), ObjectPainterResources.HeaderSeparatorColor);
 				GUILayout.Space(4);
 
 				// Create reorderable prefab list

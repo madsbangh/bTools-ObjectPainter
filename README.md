@@ -2,7 +2,7 @@
 ## Object Painter
 
 **Prefab paint brush.**  
-*Requires bTools Core*
+*Does not require bTools Core*
 
 ### Features
 - Paint prefabs on surfaces
