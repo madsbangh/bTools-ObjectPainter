@@ -8,10 +8,70 @@ namespace bTools.ObjectPainter
 {
 	public class ObjectPainterWindow : EditorWindow
 	{
+		#region Properties
 		// GUI
-		private AnimBool panelAnim;
 		private Vector2 presetsScroll;
-		ReorderableList brushList;
+		private AnimBool brushPanelAnim;
+		public AnimBool BrushPanelAnim
+		{
+			get
+			{
+				if (brushPanelAnim == null)
+				{
+					brushPanelAnim = new AnimBool(false, Repaint);
+				}
+
+				return brushPanelAnim;
+			}
+		}
+		private ReorderableList brushList;
+		public ReorderableList BrushList
+		{
+			get
+			{
+				if (brushList == null)
+				{
+					brushList = new ReorderableList(SavedBrushes.brushes, typeof(BrushPreset), false, true, true, true);
+					brushList.drawHeaderCallback = (Rect rect) =>
+					{
+						EditorGUI.LabelField(rect, "Brushes");
+						rect.x = rect.xMax - 32;
+						rect.width = 16;
+						if (GUI.Button(rect, EditorGUIUtility.FindTexture("d_Toolbar Plus"), GUIStyle.none))
+						{
+							SavedBrushes.brushes.Add(new BrushPreset());
+							brushList.index = SavedBrushes.brushes.Count - 1;
+							brushList.GrabKeyboardFocus();
+							presetsScroll.y = float.MaxValue;
+						}
+						rect.x += 16;
+
+						if (GUI.Button(rect, EditorGUIUtility.FindTexture("d_Toolbar Minus"), GUIStyle.none))
+						{
+							if (brushList.index >= 0 && brushList.index <= SavedBrushes.brushes.Count - 1)
+							{
+								Undo.RecordObject(SavedBrushes, "Removed Brush Preset");
+								SavedBrushes.brushes.RemoveAt(brushList.index);
+								brushList.index = Mathf.Max(0, brushList.index - 1);
+								brushList.GrabKeyboardFocus();
+							}
+						}
+					};
+
+					brushList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
+					{
+						EditorGUI.LabelField(rect, SavedBrushes.brushes[index].brushName);
+					};
+				}
+
+				if (brushList.index >= SavedBrushes.brushes.Count || brushList.index < 0)
+				{
+					brushList.index = 0;
+				}
+
+				return brushList;
+			}
+		}
 
 		// Tool
 		private RaycastHit brushHit;
@@ -40,10 +100,16 @@ namespace bTools.ObjectPainter
 					}
 				}
 
+				if (m_savedBrushes.brushes.Count == 0)
+				{
+					m_savedBrushes.brushes.Add(new BrushPreset());
+				}
+
 				EditorUtility.SetDirty(m_savedBrushes);
 				return m_savedBrushes;
 			}
 		}
+		#endregion
 
 		[MenuItem("bTools/ObjectPainter")]
 		static void Init()
@@ -52,60 +118,12 @@ namespace bTools.ObjectPainter
 
 			window.titleContent = new GUIContent("ObjectPainter");
 			window.minSize = new Vector2(220, 100);
-
 		}
 
 		private void OnEnable()
 		{
-			panelAnim = new AnimBool(false, Repaint);
 			SceneView.onSceneGUIDelegate += OnSceneGUI;
 			Undo.undoRedoPerformed += Repaint;
-
-			// Setup brush list
-			if (brushList == null)
-			{
-				brushList = new ReorderableList(SavedBrushes.brushes, typeof(BrushPreset), false, true, true, true);
-				brushList.drawHeaderCallback = (Rect rect) =>
-				{
-					EditorGUI.LabelField(rect, "Brushes");
-					rect.x = rect.xMax - 32;
-					rect.width = 16;
-					if (GUI.Button(rect, EditorGUIUtility.FindTexture("d_Toolbar Plus"), GUIStyle.none))
-					{
-						SavedBrushes.brushes.Add(new BrushPreset());
-						brushList.index = SavedBrushes.brushes.Count - 1;
-						brushList.GrabKeyboardFocus();
-						presetsScroll.y = float.MaxValue;
-					}
-					rect.x += 16;
-
-					if (GUI.Button(rect, EditorGUIUtility.FindTexture("d_Toolbar Minus"), GUIStyle.none))
-					{
-						if (brushList.index >= 0 && brushList.index <= SavedBrushes.brushes.Count - 1)
-						{
-							Undo.RecordObject(SavedBrushes, "Removed Brush Preset");
-							SavedBrushes.brushes.RemoveAt(brushList.index);
-							brushList.index = Mathf.Max(0, brushList.index - 1);
-							brushList.GrabKeyboardFocus();
-						}
-					}
-				};
-
-				brushList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
-				{
-					EditorGUI.LabelField(rect, SavedBrushes.brushes[index].brushName);
-				};
-			}
-
-			if (SavedBrushes.brushes.Count == 0)
-			{
-				SavedBrushes.brushes.Add(new BrushPreset());
-			}
-
-			if (brushList.index >= SavedBrushes.brushes.Count || brushList.index < 0)
-			{
-				brushList.index = 0;
-			}
 		}
 
 		private void OnDisable()
@@ -136,7 +154,7 @@ namespace bTools.ObjectPainter
 				Repaint();
 			}
 
-			// Rects
+			// Setup rects
 			Rect windowPos = position;
 			windowPos.x = 0;
 			windowPos.y = 0;
@@ -144,34 +162,38 @@ namespace bTools.ObjectPainter
 
 			// Brush preset list rect
 			Rect leftRect = windowPos;
-			leftRect.width = Mathf.Ceil(leftRect.width * (panelAnim.faded * 0.3333f));
-			leftRect.y += EditorGUIUtility.singleLineHeight;
+			leftRect.width = Mathf.Ceil(leftRect.width * (BrushPanelAnim.faded * 0.3333f));
+			leftRect.xMin += 2;
+			leftRect.y += EditorGUIUtility.singleLineHeight + 4;
 
 			// Brush settings list
 			Rect rightRect = windowPos;
-			rightRect.width = Mathf.Ceil(rightRect.width * (1 - (panelAnim.faded * 0.3333f)));
+			rightRect.width = Mathf.Ceil(rightRect.width * (1 - (BrushPanelAnim.faded * 0.3333f)));
 			rightRect.x = leftRect.xMax + 2;
 			rightRect.y += EditorGUIUtility.singleLineHeight;
 
-			EditorGUI.DrawRect(leftRect, Settings.Get<ToolsSettings_General>().shadedBackgroundColor);
-
 			// Toolbar
 			EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-			panelAnim.target = GUILayout.Toggle(panelAnim.target, "Brushes", EditorStyles.toolbarButton);
+			BrushPanelAnim.target = GUILayout.Toggle(BrushPanelAnim.target, "Brushes", EditorStyles.toolbarButton);
 			toolEnabled = GUILayout.Toggle(toolEnabled, "Enable (Tab)", EditorStyles.toolbarButton);
 			GUILayout.FlexibleSpace();
 			EditorGUILayout.EndHorizontal();
 
+			// Brush list
 			using (new GUILayout.AreaScope(leftRect))
 			{
-				using (var scroll = new EditorGUILayout.ScrollViewScope(presetsScroll, GUIStyle.none, GUI.skin.verticalScrollbar))
+				using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
 				{
-					presetsScroll = scroll.scrollPosition;
+					using (var scroll = new EditorGUILayout.ScrollViewScope(presetsScroll, GUIStyle.none, GUI.skin.verticalScrollbar))
+					{
+						presetsScroll = scroll.scrollPosition;
 
-					brushList.DoLayoutList();
+						BrushList.DoLayoutList();
+					}
 				}
 			}
 
+			// Brush settings
 			using (new GUILayout.AreaScope(rightRect))
 			{
 				if (SavedBrushes.brushes.Count == 0)
@@ -179,18 +201,17 @@ namespace bTools.ObjectPainter
 					SavedBrushes.brushes.Add(new BrushPreset());
 				}
 
-				if (brushList.index >= SavedBrushes.brushes.Count || brushList.index < 0)
+				if (BrushList.index >= SavedBrushes.brushes.Count || BrushList.index < 0)
 				{
-					brushList.index = 0;
+					BrushList.index = 0;
 				}
 
 				GUILayout.Space(4);
-				SavedBrushes.brushes[brushList.index].OnGUI(this);
+				SavedBrushes.brushes[BrushList.index].OnGUI(this);
 			}
 		}
 
 		// SCENE GUI //
-
 		void OnSceneGUI(SceneView view)
 		{
 			Event current = Event.current;
@@ -237,37 +258,32 @@ namespace bTools.ObjectPainter
 			// Input checks
 			if (current.type == EventType.ScrollWheel && current.modifiers == EventModifiers.Alt)
 			{
-				SavedBrushes.brushes[brushList.index].brushRadius += current.delta.y / 2.5f;
+				SavedBrushes.brushes[BrushList.index].brushRadius += current.delta.y / 2.5f;
 
 				current.Use();
 			}
 
 			// Do Brush
-			UpdateBrush(ctrlID, mousePos);
+			DrawBrush(ctrlID, mousePos);
 			PaintObjects(current);
-		}
-
-		public void ChangeSelected(int index)
-		{
-			brushList.index = index;
 		}
 
 		// BRUSH METHODS //
 
-		private void UpdateBrush(int ctrlID, Vector2 mousePos)
+		private void DrawBrush(int ctrlID, Vector2 mousePos)
 		{
 			mousePos.y = Camera.current.pixelHeight - mousePos.y;
 			Ray ray = Camera.current.ScreenPointToRay(mousePos);
 
-			if (Physics.Raycast(ray, out brushHit, Mathf.Infinity, SavedBrushes.brushes[brushList.index].layerMask, QueryTriggerInteraction.Ignore))
+			if (Physics.Raycast(ray, out brushHit, Mathf.Infinity, SavedBrushes.brushes[BrushList.index].layerMask, QueryTriggerInteraction.Ignore))
 			{
 				Handles.color = Colors.DolphinGray.WithAlpha(0.5f);
-				Handles.CircleHandleCap(ctrlID, brushHit.point + (brushHit.normal * 0.1f), Quaternion.LookRotation(brushHit.normal), SavedBrushes.brushes[brushList.index].brushRadius, EventType.Repaint);
+				Handles.CircleHandleCap(ctrlID, brushHit.point + (brushHit.normal * 0.1f), Quaternion.LookRotation(brushHit.normal), SavedBrushes.brushes[BrushList.index].brushRadius, EventType.Repaint);
 				Handles.DrawLine(brushHit.point, brushHit.point + (brushHit.normal * 10));
 
 				Handles.color = Colors.GuppieGreen;
 				Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
-				Handles.CircleHandleCap(ctrlID, brushHit.point + (brushHit.normal * 0.1f), Quaternion.LookRotation(brushHit.normal), SavedBrushes.brushes[brushList.index].brushRadius, EventType.Repaint);
+				Handles.CircleHandleCap(ctrlID, brushHit.point + (brushHit.normal * 0.1f), Quaternion.LookRotation(brushHit.normal), SavedBrushes.brushes[BrushList.index].brushRadius, EventType.Repaint);
 				Handles.DrawLine(brushHit.point, brushHit.point + (brushHit.normal * 10));
 
 				Cursor.visible = false;
@@ -284,7 +300,7 @@ namespace bTools.ObjectPainter
 		{
 			// Checks
 			if (current.type == EventType.Repaint) return;
-			if (SavedBrushes.brushes[brushList.index].prefabs.Count == 0) return;
+			if (SavedBrushes.brushes[BrushList.index].prefabs.Count == 0) return;
 			if (!mouseIsDown && current.type == EventType.MouseDown && current.modifiers == EventModifiers.None && current.button == 0)
 			{
 				lastCollider = brushHit.collider;
@@ -303,7 +319,7 @@ namespace bTools.ObjectPainter
 			// Calculate direction from center to random angle.
 			Vector3 dir = (Quaternion.AngleAxis(Random.Range(0f, 360f), brushHit.normal) * Vector3.Cross(brushHit.normal, Vector3.right)).normalized;
 			// Calculate random range from center to radius.
-			float range = Random.Range(0, SavedBrushes.brushes[brushList.index].brushRadius);
+			float range = Random.Range(0, SavedBrushes.brushes[BrushList.index].brushRadius);
 			// Construct selected location from direction + range.
 			Vector3 selectPos = brushHit.point + (dir * range);
 
@@ -316,7 +332,7 @@ namespace bTools.ObjectPainter
 			bool oldQuery = Physics.queriesHitBackfaces;
 			Physics.queriesHitBackfaces = true;
 
-			int layers = SavedBrushes.brushes[brushList.index].layerMask;
+			int layers = SavedBrushes.brushes[BrushList.index].layerMask;
 			if (!Physics.Raycast(upRay, out hitToSurface, Mathf.Infinity, layers, QueryTriggerInteraction.Ignore)
 			  && !Physics.Raycast(downRay, out hitToSurface, Mathf.Infinity, layers, QueryTriggerInteraction.Ignore)
 			  && !Physics.Raycast(safeRay, out hitToSurface, Mathf.Infinity, layers, QueryTriggerInteraction.Ignore)
@@ -325,25 +341,25 @@ namespace bTools.ObjectPainter
 				return;
 			}
 
-			if (SavedBrushes.brushes[brushList.index].colliderStrict && hitToSurface.collider != lastCollider) return;
+			if (SavedBrushes.brushes[BrushList.index].colliderStrict && hitToSurface.collider != lastCollider) return;
 
 			Physics.queriesHitBackfaces = oldQuery;
 
-			if (SavedBrushes.brushes[brushList.index].cullEnabled)
+			if (SavedBrushes.brushes[BrushList.index].cullEnabled)
 			{
-				float angle = Vector3.Angle(SavedBrushes.brushes[brushList.index].cullRef, hitToSurface.normal);
+				float angle = Vector3.Angle(SavedBrushes.brushes[BrushList.index].cullRef, hitToSurface.normal);
 
-				if (!SavedBrushes.brushes[brushList.index].cullInvert && angle > SavedBrushes.brushes[brushList.index].cullAngle)
+				if (!SavedBrushes.brushes[BrushList.index].cullInvert && angle > SavedBrushes.brushes[BrushList.index].cullAngle)
 				{
 					return;
 				}
-				if (SavedBrushes.brushes[brushList.index].cullInvert && angle < SavedBrushes.brushes[brushList.index].cullAngle)
+				if (SavedBrushes.brushes[BrushList.index].cullInvert && angle < SavedBrushes.brushes[BrushList.index].cullAngle)
 				{
 					return;
 				}
 			}
 
-			BrushPrefabSettings pick = PickObject();
+			BrushPrefabSettings pick = ChooseRandomPrefab();
 
 			if (pick.paintObject == null)
 			{
@@ -355,7 +371,7 @@ namespace bTools.ObjectPainter
 			float objScale = Random.Range(pick.objectRandomScale.x, pick.objectRandomScale.y);
 			float objRot = Random.Range(pick.objectRandomRotation.x, pick.objectRandomRotation.y);
 
-			GameObject newObj = PrefabUtility.InstantiatePrefab((Object)pick.paintObject) as GameObject;
+			GameObject newObj = PrefabUtility.InstantiatePrefab(pick.paintObject) as GameObject;
 
 			newObj.transform.position = hitToSurface.point;
 
@@ -396,22 +412,22 @@ namespace bTools.ObjectPainter
 			lastHitPoint = brushHit.point;
 
 			Undo.RegisterCreatedObjectUndo(newObj, "Object Painter");
-			float rate = SavedBrushes.brushes[brushList.index].brushRate;
+			float rate = SavedBrushes.brushes[BrushList.index].brushRate;
 			placeTimeStamp = EditorApplication.timeSinceStartup + ((60d / rate) / 60d);
 		}
 
-		private BrushPrefabSettings PickObject()
+		private BrushPrefabSettings ChooseRandomPrefab()
 		{
-			BrushPrefabSettings currentPick = SavedBrushes.brushes[brushList.index].prefabs[0];
+			BrushPrefabSettings currentPick = SavedBrushes.brushes[BrushList.index].prefabs[0];
 			float currentWeight = Random.Range(0f, 1f) * currentPick.weight;
 
-			for (int i = 0; i < SavedBrushes.brushes[brushList.index].prefabs.Count; i++)
+			for (int i = 0; i < SavedBrushes.brushes[BrushList.index].prefabs.Count; i++)
 			{
-				float weight = Random.Range(0f, 1f) * SavedBrushes.brushes[brushList.index].prefabs[i].weight;
+				float weight = Random.Range(0f, 1f) * SavedBrushes.brushes[BrushList.index].prefabs[i].weight;
 				if (weight > currentWeight)
 				{
 					currentWeight = weight;
-					currentPick = SavedBrushes.brushes[brushList.index].prefabs[i];
+					currentPick = SavedBrushes.brushes[BrushList.index].prefabs[i];
 				}
 			}
 
