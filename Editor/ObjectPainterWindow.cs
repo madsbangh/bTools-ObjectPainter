@@ -189,7 +189,7 @@ namespace bTools.ObjectPainter
 
 					EditorGUIUtility.labelWidth = lastLabelWidth;
 
-					if (parent && PrefabUtility.GetPrefabType(parent) != PrefabType.None)
+					if (parent != null && parent.gameObject.scene.name == null)
 					{
 						EditorGUILayout.HelpBox("Only scene objects can be set as parent for newly painted objects", MessageType.Error);
 					}
