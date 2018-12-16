@@ -184,8 +184,15 @@ namespace bTools.ObjectPainter
 				{
 					float lastLabelWidth = EditorGUIUtility.labelWidth;
 					EditorGUIUtility.labelWidth = 60;
+
 					parent = EditorGUILayout.ObjectField("Parent", parent, typeof(Transform), true) as Transform;
+
 					EditorGUIUtility.labelWidth = lastLabelWidth;
+
+					if (parent && PrefabUtility.GetPrefabType(parent) != PrefabType.None)
+					{
+						EditorGUILayout.HelpBox("Only scene objects can be set as parent for newly painted objects", MessageType.Error);
+					}
 				}
 
 				if (SavedBrushes.brushes.Count == 0)
