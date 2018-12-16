@@ -70,6 +70,8 @@ namespace bTools.ObjectPainter
 
 		// Data
 		private SavedBrushes m_savedBrushes;
+		private Transform parent;
+
 		public SavedBrushes SavedBrushes
 		{
 			get
@@ -177,6 +179,15 @@ namespace bTools.ObjectPainter
 			// Brush settings
 			using (new GUILayout.AreaScope(rightRect))
 			{
+				GUILayout.Space(4);
+				using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+				{
+					float lastLabelWidth = EditorGUIUtility.labelWidth;
+					EditorGUIUtility.labelWidth = 60;
+					parent = EditorGUILayout.ObjectField("Parent", parent, typeof(Transform), true) as Transform;
+					EditorGUIUtility.labelWidth = lastLabelWidth;
+				}
+
 				if (SavedBrushes.brushes.Count == 0)
 				{
 					SavedBrushes.brushes.Add(new BrushPreset());
@@ -370,6 +381,12 @@ namespace bTools.ObjectPainter
 			float objRot = Random.Range(pick.objectRandomRotation.x, pick.objectRandomRotation.y);
 
 			GameObject newObj = PrefabUtility.InstantiatePrefab(pick.paintObject) as GameObject;
+
+			// Set parent
+			if (parent)
+			{
+				newObj.transform.parent = parent;
+			}
 
 			newObj.transform.position = hitToSurface.point;
 
